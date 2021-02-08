@@ -2,13 +2,14 @@
 import pygame
 import numpy as np
 import random
+import control
 from scipy.stats import uniform
 
 FPS = 60
-SCALING = 0.1 # 10:1 pixel -> meter conversion
+SCALING = 0.05 # 10:1 pixel -> meter conversion
 
-SCREENWIDTH  = 2100
-SCREENHEIGHT = 2100
+SCREENWIDTH  = int(21000*SCALING)
+SCREENHEIGHT = int(21000*SCALING)
 
 SIZE = (SCREENWIDTH, SCREENHEIGHT)
 
@@ -20,8 +21,6 @@ WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 
-plane_dict={}
-
 def main():
     global SCREEN, FPSCLOCK
     pygame.init()
@@ -29,13 +28,31 @@ def main():
     SCREEN = pygame.display.set_mode(SIZE)
     pygame.display.set_caption('ATC')
 
+    # airfields = [airfield(1), airfield(2)]
+    # planes = {'1': plane('1', (1000,1000))}
+
     draw_world()
+
+    airfield_1 = control.airfield((-350*0.05,-250*0.05), (-250*0.05,750*0.05))
+
+    parking_spots = control.parking_spots([airfield_1])
+
+    n = 10
+
+    #Draw parking spots
+    for spot in parking_spots.get_parking_spots():
+        pygame.draw.circle(SCREEN, GREEN, (spot[0]+SCREENWIDTH/2, spot[1]+SCREENHEIGHT/2), 1000*SCALING, 1)
 
     while True:
         event = pygame.event.poll()
         if event.type == pygame.QUIT:
             break
-        spawn()
+
+        if (n == 10):
+            #new_id = spawn()[0]
+            n = 0
+        else:
+            n += 1
 
         pygame.display.flip()
         # Loop at 10 Hz
@@ -47,9 +64,13 @@ def draw_world():
     SCREEN.fill(BLACK)
     #Draw active area
     pygame.draw.circle(SCREEN, WHITE, (SCREENWIDTH/2,SCREENHEIGHT/2), 10000*SCALING, 1)
-    pygame.draw.rect(SCREEN, WHITE, [SCREENWIDTH/2-35, SCREENHEIGHT/2-25, 100*SCALING, 500*SCALING],1)
-    pygame.draw.rect(SCREEN, WHITE, [SCREENWIDTH/2+35, SCREENHEIGHT/2-25, 100*SCALING, 500*SCALING],1)
-    
+
+    #Draw airfields
+    pygame.draw.rect(SCREEN, WHITE, [SCREENWIDTH/2-(350*SCALING), SCREENHEIGHT/2-(250*SCALING), 100*SCALING, 500*SCALING],1)
+    pygame.draw.rect(SCREEN, WHITE, [SCREENWIDTH/2+(250*SCALING), SCREENHEIGHT/2-(250*SCALING), 100*SCALING, 500*SCALING],1)
+
+    # TODO init classes for airfields
+
 def spawn():
     R = 10000*SCALING
     theta = uniform.rvs(0, 2*np.pi, size=1)
@@ -59,12 +80,10 @@ def spawn():
 
     id = ''.join(random.choice('0123456789ABCDEF') for i in range(6))
 
-    data = {id: {'Location': (x,y), 'Holding': False, 'Landing': False}}
-    plane_dict.update(data)
+    data = {id: {'Location': (x,y), 'Holding': False, 'Landed': False}}
 
-    #draw plane
-    pygame.draw.circle(SCREEN, RED, (x,y), 50*SCALING, 1)
-    
     return id, plane_dict
+
+
 
 main()
