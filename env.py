@@ -35,12 +35,25 @@ def main():
 
     airfield_1 = control.airfield((-350*0.05,-250*0.05), (-250*0.05,750*0.05))
 
+    ATC = control.ATC([airfield_1])
+
+    new_id, new_loc = spawn()
+
+    ATC.add_plane(new_id,new_loc)
+
     parking_spots = control.parking_spots([airfield_1])
+
+    print(new_loc)
+    print(ATC.find_parking(new_id, parking_spots.parking_list()))
+
+    # diction = parking_spots.parking_list()
+
+    # print(diction.keys())
 
     n = 10
 
     #Draw parking spots
-    for spot in parking_spots.get_parking_spots():
+    for spot in parking_spots.get_spots():
         pygame.draw.circle(SCREEN, GREEN, (spot[0]+SCREENWIDTH/2, spot[1]+SCREENHEIGHT/2), 1000*SCALING, 1)
 
     while True:
@@ -75,14 +88,21 @@ def spawn():
     R = 10000*SCALING
     theta = uniform.rvs(0, 2*np.pi, size=1)
 
-    x = int(SCREENWIDTH/2 + R*np.cos(theta))
-    y = int(SCREENHEIGHT/2 + R*np.sin(theta))
+    # x = int(SCREENWIDTH/2 + R*np.cos(theta))
+    # y = int(SCREENHEIGHT/2 + R*np.sin(theta))
+
+    x = R*np.cos(theta)
+    y = R*np.sin(theta)
+
+    loc = (x,y)
 
     id = ''.join(random.choice('0123456789ABCDEF') for i in range(6))
 
-    data = {id: {'Location': (x,y), 'Holding': False, 'Landed': False}}
+    return id, loc
 
-    return id, plane_dict
+
+
+
 
 
 

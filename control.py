@@ -4,6 +4,9 @@ import queue
 import numpy as np
 import random
 from scipy.stats import uniform
+from skimage import draw
+
+from astar import astar
 
 class circle:
     def __init__(self, origin, radius):
@@ -61,12 +64,14 @@ class parking_spots:
         self.active_rad = active_rad
         self.holding_rad = holding_rad
 
-        self.parking_spots = []
+        self.parking_spots = {}
 
+        #Create holding spots on edge of smaller concentric circles to active area
         for i in range(int(np.round(active_rad / (2*holding_rad)))):
+            #Special case for holding circle in center of active area
             if i == 0:
                 if self.check_spot((0,0),holding_rad, airfields):
-                    self.parking_spots.append((0,0))
+                    self.parking_spots.update({(0,0): True})
                 continue
 
             radius = i*2*holding_rad
@@ -79,10 +84,10 @@ class parking_spots:
             print(i,num_spots)
             for j in range(int(num_spots)):
                 if self.check_spot((radius*np.cos(j*dTheta), radius*np.sin(j*dTheta)),holding_rad, airfields):
-                    self.parking_spots.append((radius*np.cos(j*dTheta), radius*np.sin(j*dTheta)))
+                    self.parking_spots.update({(radius*np.cos(j*dTheta), radius*np.sin(j*dTheta)): True})
 
     def check_spot(self, origin, holding_rad, airfields):
-        #clap parking spots that hit hitboxes
+        #Remove parking spots that overlap airfields
         square_circle_topleft = (origin[0]-holding_rad,origin[1]-holding_rad)
         square_circle_bottomright = (origin[0]+holding_rad,origin[1]+holding_rad)
         for airfield in airfields:
@@ -95,20 +100,24 @@ class parking_spots:
                 return True
         return True
 
-    def get_parking_spots(self):
+    def parking_list(self):
         return self.parking_spots
 
+    def get_spots(self):
+        return self.parking_spots.keys()
+
+    def set_status(self, spot, status):
+        self.parking_spots[spot] = status
 
 
-
-class control:
+class ATC:
     def __init__(self, airfields, planes = {}):
         self.FPS = 60
         self.SCALING = 0.05
         self.VEL = 140*1000/3600
-        self.SCALED_VEL = VEL * SCALING
-        self.SCREENWIDTH  = int(21000*SCALING)
-        self.SCREENHEIGHT = int(21000*SCALING)
+        self.SCALED_VEL = self.VEL * self.SCALING
+        self.SCREENWIDTH  = int(21000*self.SCALING)
+        self.SCREENHEIGHT = int(21000*self.SCALING)
 
         self.airfields = airfields
         self.planes = planes
@@ -116,7 +125,22 @@ class control:
 
     def add_plane(self, id, location):
         self.plane_queue.put(id)
-        planes[id] = plane(id, location)
+        self.planes[id] = plane(id, location)
+
+    def find_parking(self, id, parking_spots):
+        location = self.planes[id].get_location()
+
+        min_dist = 1000000
+        spot = (2000,2000)
+
+        for k in parking_spots.keys():
+            if parking_spots[k]:
+                dist = np.sqrt((location[0][0]-k[0])**2 + (location[1][0]-k[1])**2)
+                if dist < min_dist:
+                    min_dist = dist
+                    spot = k
+
+        return spot
 
     def land(self, airfield):
         airfield.set_status(False)
@@ -136,8 +160,18 @@ class control:
                     self.land(airfield)
                     pass
 
-    def update_positions(self, planes):
-        pass
+    def plan_path(self, id, parking_spots, destination):
+        holding_rad = 1050*0.05
+        location = self.planes[id].get_location()
+
+        nav_map = np.zeros(self.SCREENWIDTH, self.SCREENHEIGHT)
+
+        for k in parking_spots.keys():
+            if not parking_spots[k]:
+                rr, cc = draw.circle(int(k[0]), int(k[1]), radius=1050*0.05, shape=arr.shape)
+                nav_map[rr,cc] = 1
+
+        return astar(nav_map, location, destination)
 
     def map_hitbox(self):
         hitboxes = [plane.get_hitbox() for plane in self.planes].extend([airfield.get_hitbox() for airfield in self.airfields])
