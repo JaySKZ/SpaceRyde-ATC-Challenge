@@ -58,6 +58,6 @@ Note on the "holding spot" mentioned in 4(ii): the optimal approach would be to 
 
 Path planning was done using the A* search algorithm, which is a greedy-based algorithm for graph traversal, as an extension to Dijkstra's algorithm. To be able to use this, we need to turn our active area into a "graph". This can be achieved by viewing the active area as a numpy array of 0's. Then, we find all our obstacles/boundaries, such as pther planes, the occupied holding circles and the airstrips (the radius of holding circles were increased by 50m to avoid collisions). Passing this, as well as our starting and desired ending coordinates into our path planning algorithm, we receive a list of coordinates for the optimal path. To make moving simpler, this list was changed into a FIFO queue, so that at every time step we can pop a coordinate, and change the plane's current location.
 
-##Final words
-Thank you for the oppotunity to complete this challenge! It was a lot of fun and definitely took some mental capacity and flexibility. Due to timing constraints and conflicts with school, the testing done was very limited, although I did manage to change the locations of the airstrips without seeing adverse effects on the system. 
+## Final words
+Thank you for the oppotunity to complete this challenge! It was a lot of fun and definitely took some mental capacity and flexibility. Due to timing constraints and conflicts with school, the testing done was very limited, but I tried my best to develop the system with some *theoretical* strengths and resilience, which I would be happy to talk about or explain. I would also love to know how this is achieved in ROS, or using other and more efficient methods. I hope to have the chance to discuss this further, thank you!
 
