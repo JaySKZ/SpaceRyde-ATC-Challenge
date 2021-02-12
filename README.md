@@ -47,6 +47,17 @@ Instead, a class-based implmentation was chosen. The idea here is to mimic the i
 
 The system procedure is roughly as follows:
 1. Spawn world with set physical parameters, visualizing with our PyGame UI
-2. 
+2. Run our main PyGame loop at 10 Hz (or 10 clock ticks for 60 FPS) since this is our frequency of communication
+3. Spawn planes at some chosen rate (up to the max number of planes allowable in the area)
+4. Queue the planes based on spawn, and let our ATC make the following decision for the plane at the front of the queue:
+    1. Land planes, if possible
+    2. If landing not possible, send plane to the closest available holding spot
+5. Repeat for planes at the front of the queue
 
+Note on the "holding spot" mentioned in 4(ii): the optimal approach would be to solve the circle packing problem to fill our active area with as many holding circles as possible. An even better extended approach would be to allow the circles to overlap, and make the planes fly in such a ways such that they are out of sync and will not collide on the perimeter. Both of these approaches are significantly difficult to implement, so holding spots were simply made along concentric circles of the active area, at a safe distance from each other and disallowing overlaps.
+
+Path planning was done using the A* search algorithm, which is a greedy-based algorithm for graph traversal, as an extension to Dijkstra's algorithm. To be able to use this, we need to turn our active area into a "graph". This can be achieved by viewing the active area as a numpy array of 0's. Then, we find all our obstacles/boundaries, such as pther planes, the occupied holding circles and the airstrips (the radius of holding circles were increased by 50m to avoid collisions). Passing this, as well as our starting and desired ending coordinates into our path planning algorithm, we receive a list of coordinates for the optimal path. To make moving simpler, this list was changed into a FIFO queue, so that at every time step we can pop a coordinate, and change the plane's current location.
+
+##Final words
+Thank you for the oppotunity to complete this challenge! It was a lot of fun and definitely took some mental capacity and flexibility. Due to timing constraints and conflicts with school, the testing done was very limited, although I did manage to change the locations of the airstrips without seeing adverse effects on the system. 
 
