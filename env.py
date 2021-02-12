@@ -28,29 +28,15 @@ def main():
     SCREEN = pygame.display.set_mode(SIZE)
     pygame.display.set_caption('ATC')
 
-    # airfields = [airfield(1), airfield(2)]
-    # planes = {'1': plane('1', (1000,1000))}
-
     draw_world()
 
-    airfield_1 = control.airfield((-350*0.05,-250*0.05), (-250*0.05,750*0.05))
+    airfield_1 = control.airfield(1, (-350*0.05,-250*0.05), (-250*0.05,750*0.05))
+    airfield_2 = control.airfield(2, (250*0.05,-250*0.05), (350*0.05,750*0.05))
 
-    ATC = control.ATC([airfield_1])
+    controller = control.ATC([airfield_1, airfield_2])
+    parking_spots = control.parking_spots([airfield_1, airfield_2])
 
-    new_id, new_loc = spawn()
-
-    ATC.add_plane(new_id,new_loc)
-
-    parking_spots = control.parking_spots([airfield_1])
-
-    print(new_loc)
-    print(ATC.find_parking(new_id, parking_spots.parking_list()))
-
-    # diction = parking_spots.parking_list()
-
-    # print(diction.keys())
-
-    n = 10
+    spawn_counter = 10
 
     #Draw parking spots
     for spot in parking_spots.get_spots():
@@ -61,11 +47,17 @@ def main():
         if event.type == pygame.QUIT:
             break
 
-        if (n == 10):
-            #new_id = spawn()[0]
-            n = 0
+        if (spawn_counter == 10):
+            new_id, new_loc = spawn()
+            controller.add_plane(new_id,new_loc)
+            spawn_counter = 0
         else:
-            n += 1
+            spawn_counter += 1
+
+        locations = controller.decision(parking_spots.parking_list())
+
+        for plane in locations:
+            pygame.draw.circle(SCREEN, RED, (plane[0]+SCREENWIDTH/2, plane[1]+SCREENHEIGHT/2), 50*SCALING, 1)
 
         pygame.display.flip()
         # Loop at 10 Hz
@@ -80,7 +72,7 @@ def draw_world():
 
     #Draw airfields
     pygame.draw.rect(SCREEN, WHITE, [SCREENWIDTH/2-(350*SCALING), SCREENHEIGHT/2-(250*SCALING), 100*SCALING, 500*SCALING],1)
-    pygame.draw.rect(SCREEN, WHITE, [SCREENWIDTH/2+(250*SCALING), SCREENHEIGHT/2-(250*SCALING), 100*SCALING, 500*SCALING],1)
+    pygame.draw.rect(SCREEN, WHITE, [SCREENWIDTH/2+(350*SCALING), SCREENHEIGHT/2-(250*SCALING), 100*SCALING, 500*SCALING],1)
 
     # TODO init classes for airfields
 
@@ -96,14 +88,8 @@ def spawn():
 
     loc = (x,y)
 
-    id = ''.join(random.choice('0123456789ABCDEF') for i in range(6))
+    id = ''.join(random.choice('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ') for i in range(6))
 
     return id, loc
-
-
-
-
-
-
 
 main()

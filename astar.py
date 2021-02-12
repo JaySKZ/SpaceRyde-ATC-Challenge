@@ -1,4 +1,7 @@
+#!/usr/bin/env python
 import numpy as np
+
+#A* algorithm thanks to https://gist.github.com/Nicholas-Swift
 
 class Node():
     """A node class for A* Pathfinding"""
